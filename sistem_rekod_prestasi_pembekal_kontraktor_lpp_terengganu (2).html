@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Rekod Prestasi Pembekal / Kontraktor - LPP Negeri Terengganu</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN for Interactive Pie Chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF & jsPDF-AutoTable CDNs for PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        lpp: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                            gold: '#d97706',
+                            goldlight: '#fef3c7'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
+
+    <div id="app" class="flex-grow flex flex-col">
+        
+        <!-- LOGIN / REGISTER VIEW CONTAINER -->
+        <div id="auth-container" class="flex-grow flex items-center justify-center p-4 bg-gradient-to-br from-lpp-900 via-lpp-800 to-slate-900 relative overflow-hidden">
+            
+            <!-- Decorative Elements -->
+            <div class="absolute -top-24 -left-24 w-96 h-96 bg-lpp-600/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100 z-10 animate-fade-in">
+                <!-- Header -->
+                <div class="bg-lpp-800 p-6 text-center text-white relative">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 mb-3 border border-white/20 shadow-inner">
+                        <i class="fa-solid font-bold text-3xl text-amber-400 fa-building-columns"></i>
+                    </div>
+                    <h1 class="text-xl font-bold tracking-wide">LPP NEGERI TERENGGANU</h1>
+                    <p class="text-xs text-lpp-100 mt-1 uppercase tracking-wider font-medium">Sistem Rekod Prestasi Pembekal / Kontraktor</p>
+                </div>
+
+                <!-- Auth Navigation Tabs -->
+                <div class="flex border-b border-slate-200 bg-slate-50">
+                    <button id="tab-login-btn" onclick="switchAuthTab('login')" class="flex-1 py-3 text-sm font-semibold text-lpp-700 border-b-2 border-lpp-700 transition">
+                        <i class="fa-solid fa-right-to-bracket mr-2"></i>Log Masuk
+                    </button>
+                    <button id="tab-register-btn" onclick="switchAuthTab('register')" class="flex-1 py-3 text-sm font-semibold text-slate-500 hover:text-slate-700 transition">
+                        <i class="fa-solid fa-user-plus mr-2"></i>Daftar Akaun Baharu
+                    </button>
+                </div>
+
+                <!-- Alert Message Box -->
+                <div id="auth-alert" class="hidden m-4 p-3 rounded-lg text-sm flex items-center gap-2"></div>
+
+                <!-- LOGIN FORM -->
+                <form id="login-form" onsubmit="handleLogin(event)" class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">No. Kad Pengenalan</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <i class="fa-solid fa-id-card"></i>
+                            </span>
+                            <input type="text" id="login-ic" placeholder="Cth: 880101115544" required 
+                                class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:ring-2 focus:ring-lpp-600 focus:border-lpp-600 outline-none transition">
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-1">Gunakan No. KP tanpa tanda sempang (-)</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Kata Laluan</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <i class="fa-solid fa-lock"></i>
+                            </span>
+                            <input type="password" id="login-password" placeholder="••••••••" required 
+                                class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:ring-2 focus:ring-lpp-600 focus:border-lpp-600 outline-none transition">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-lpp-700 hover:bg-lpp-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center gap-2 text-sm">
+                        <span>Log Masuk Ke Sistem</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+
+                    <div class="mt-4 pt-4 border-t border-slate-100 text-center text-xs text-slate-500">
+                        <p class="font-medium text-slate-600 mb-1">Akaun Demo Rasmi:</p>
+                        <p>No KP: <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800">880101115544</span> | Kata Laluan: <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800">lpp123</span></p>
+                    </div>
+                </form>
+
+                <!-- REGISTER FORM -->
+                <form id="register-form" onsubmit="handleRegister(event)" class="p-6 space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nama Penuh Pengguna</label>
+                        <input type="text" id="reg-name" placeholder="Cth: Ahmad bin Zulkifli" required 
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:ring-2 focus:ring-lpp-600 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">No. Kad Pengenalan (ID Log Masuk)</label>
+                        <input type="text" id="reg-ic" placeholder="Cth: 920512115233" required 
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:ring-2 focus:ring-lpp-600 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Jawatan / Bahagian</label>
+                        <input type="text" id="reg-dept" placeholder="Cth: Pegawai Pembangunan / Bahagian Kontrak" required 
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:ring-2 focus:ring-lpp-600 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Cipta Kata Laluan</label>
+                        <input type="password" id="reg-password" placeholder="Minimum 4 aksara" required minlength="4"
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:ring-2 focus:ring-lpp-600 outline-none">
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg shadow transition flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-user-check"></i>
+                        <span>Daftar Pengguna Baharu</span>
+                    </button>
+                </form>
+
+                <div class="bg-slate-50 p-3 text-center border-t border-slate-100 text-[11px] text-slate-500">
+                    &copy; Lembaga Pertubuhan Peladang Negeri Terengganu
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN DASHBOARD APP CONTAINER -->
+        <div id="main-dashboard" class="hidden flex-grow flex flex-col min-h-screen">
+            
+            <!-- Top Header Navigation -->
+            <header class="bg-lpp-900 text-white shadow-lg sticky top-0 z-30">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex items-center justify-between h-16">
+                        <!-- Branding -->
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 bg-white/10 rounded-lg border border-white/10">
+                                <i class="fa-solid fa-building-columns text-2xl text-amber-400"></i>
+                            </div>
+                            <div>
+                                <h1 class="font-bold text-base sm:text-lg tracking-wide leading-tight">LPP NEGERI TERENGGANU</h1>
+                                <p class="text-[11px] text-lpp-100 hidden sm:block">Sistem Rekod Prestasi Pembekal / Kontraktor</p>
+                            </div>
+                        </div>
+
+                        <!-- User Info & Logout -->
+                        <div class="flex items-center space-x-4">
+                            <div class="text-right hidden sm:block">
+                                <p id="user-display-name" class="text-sm font-semibold text-white"></p>
+                                <p id="user-display-dept" class="text-[11px] text-amber-300 font-medium"></p>
+                            </div>
+                            <div class="h-8 w-px bg-lpp-700 hidden sm:block"></div>
+                            <button onclick="handleLogout()" title="Log Keluar" 
+                                class="flex items-center space-x-2 bg-red-600/80 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-red-500/30">
+                                <i class="fa-solid fa-right-from-bracket"></i>
+                                <span class="hidden md:inline">Log Keluar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+                
+                <!-- System Banner & Action Row -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800">Papan Pemuka & Pemantauan Prestasi</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Semakan sebut harga, tender, dan rekod tempoh penyiapan projek negeri.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="generatePDFReport()" 
+                            class="bg-red-700 hover:bg-red-800 text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-2">
+                            <i class="fa-solid fa-file-pdf text-sm"></i>
+                            <span>Jana Laporan PDF</span>
+                        </button>
+                        <button onclick="openModal('add-modal')" 
+                            class="bg-lpp-700 hover:bg-lpp-800 text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-2">
+                            <i class="fa-solid fa-plus-circle text-sm"></i>
+                            <span>Tambah Rekod Pembekal</span>
+                        </button>
+                        <button onclick="openModal('users-modal')" 
+                            class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-2.5 rounded-lg text-xs font-semibold shadow-sm transition flex items-center gap-2">
+                            <i class="fa-solid fa-users text-sm"></i>
+                            <span>Senarai Pengguna</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPI STATS DASHBOARD CARDS -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <!-- Total Projects -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase">Jumlah Rekod</p>
+                            <h3 id="stat-total" class="text-2xl font-black text-slate-800 mt-1">0</h3>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Keseluruhan Projek</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-folder-open"></i>
+                        </div>
+                    </div>
+
+                    <!-- On-Time -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between border-l-4 border-l-emerald-500">
+                        <div>
+                            <p class="text-[11px] font-bold text-emerald-600 uppercase">On-Time (Siap Masa)</p>
+                            <h3 id="stat-ontime" class="text-2xl font-black text-emerald-700 mt-1">0</h3>
+                            <p class="text-[10px] text-emerald-600/80 mt-0.5">Prestasi Cemerlang</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                    </div>
+
+                    <!-- EOT -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between border-l-4 border-l-amber-500">
+                        <div>
+                            <p class="text-[11px] font-bold text-amber-600 uppercase">EOT (Lanjutan Masa)</p>
+                            <h3 id="stat-eot" class="text-2xl font-black text-amber-700 mt-1">0</h3>
+                            <p class="text-[10px] text-amber-600/80 mt-0.5">Dengan Kelulusan</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                    </div>
+
+                    <!-- LAD -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between border-l-4 border-l-red-500">
+                        <div>
+                            <p class="text-[11px] font-bold text-red-600 uppercase">LAD (Denda Lewat)</p>
+                            <h3 id="stat-lad" class="text-2xl font-black text-red-700 mt-1">0</h3>
+                            <p class="text-[10px] text-red-600/80 mt-0.5">Dikenakan Penalti</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-red-50 text-red-600 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                    </div>
+
+                    <!-- Performance Score -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between bg-gradient-to-br from-lpp-50 to-emerald-50">
+                        <div>
+                            <p class="text-[11px] font-bold text-lpp-800 uppercase">Kadar On-Time</p>
+                            <h3 id="stat-rate" class="text-2xl font-black text-lpp-800 mt-1">0%</h3>
+                            <p class="text-[10px] text-lpp-600 mt-0.5">Indeks Kecekapan</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-lpp-600 text-white flex items-center justify-center text-xl shadow">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARTA PAI (PIE CHART) & RINGKASAN VISUAL -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Pie Chart Container -->
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-pie text-lpp-700"></i>
+                                    <span>Carta Taburan Prestasi Pembekal</span>
+                                </h3>
+                                <span class="text-[10px] bg-slate-100 text-slate-600 font-semibold px-2 py-0.5 rounded">Statistik Terkini</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-4">Peratusan pembekal mengikut tempoh penyiapan (On-Time, EOT, LAD).</p>
+                        </div>
+                        
+                        <!-- Canvas Pie Chart -->
+                        <div class="relative w-full h-52 flex items-center justify-center">
+                            <canvas id="performancePieChart"></canvas>
+                        </div>
+
+                        <div id="chart-empty-msg" class="hidden text-center py-8 text-slate-400 text-xs">
+                            Tiada data untuk dipaparkan dalam carta.
+                        </div>
+                    </div>
+
+                    <!-- Quick Summary & Status Breakdown -->
+                    <div class="lg:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-list-check text-amber-600"></i>
+                               <span>Analisis Ringkas & Status Projek</span>
+                            </h3>
+                            <p class="text-xs text-slate-500 mb-4">Ringkasan penilaian prestasi pembekal bagi projek LPP Terengganu.</p>
+                        </div>
+
+                        <div class="space-y-4 my-2">
+                            <!-- On-Time Progress Bar -->
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold mb-1">
+                                    <span class="text-emerald-700 flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px]"></i> Siap Tepat Masa (On-Time)</span>
+                                    <span id="bar-ontime-label" class="text-slate-600">0%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                    <div id="bar-ontime-fill" class="bg-emerald-500 h-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- EOT Progress Bar -->
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold mb-1">
+                                    <span class="text-amber-700 flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px]"></i> Lanjutan Masa (EOT)</span>
+                                    <span id="bar-eot-label" class="text-slate-600">0%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                    <div id="bar-eot-fill" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- LAD Progress Bar -->
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold mb-1">
+                                    <span class="text-red-700 flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px]"></i> Denda Lewat (LAD)</span>
+                                    <span id="bar-lad-label" class="text-slate-600">0%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                    <div id="bar-lad-fill" class="bg-red-500 h-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                            <span><i class="fa-solid fa-circle-info text-lpp-700 mr-1"></i> Data dikemaskini secara automatik berasaskan rekod semasa.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEARCH BAR & FILTER SECTION -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
+                    <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
+                        <!-- Search Box Input -->
+                        <div class="relative w-full md:w-1/2">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </span>
+                            <input type="text" id="search-input" oninput="renderTable()" 
+                                placeholder="Carian pantas: Taip nama pembekal, no. sebut harga/tender, atau tajuk..." 
+                                class="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-lpp-600 outline-none transition">
+                            <button onclick="clearSearch()" id="clear-search-btn" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <!-- Filter Tabs -->
+                        <div class="flex flex-wrap items-center gap-1.5 w-full md:w-auto text-xs">
+                            <span class="text-slate-500 font-semibold mr-1">Status:</span>
+                            <button onclick="setFilter('ALL')" id="filter-all" class="px-3 py-1.5 rounded-lg font-medium bg-lpp-700 text-white shadow-sm">Semua</button>
+                            <button onclick="setFilter('On-time')" id="filter-ontime" class="px-3 py-1.5 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200">On-Time</button>
+                            <button onclick="setFilter('EOT')" id="filter-eot" class="px-3 py-1.5 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200">EOT</button>
+                            <button onclick="setFilter('LAD')" id="filter-lad" class="px-3 py-1.5 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200">LAD</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RECORDS DATA TABLE -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-800 text-white text-xs uppercase tracking-wider">
+                                    <th class="py-3.5 px-4 font-semibold">Bil</th>
+                                    <th class="py-3.5 px-4 font-semibold">Nama Pembekal / Kontraktor</th>
+                                    <th class="py-3.5 px-4 font-semibold">No. Sebut Harga / Tender</th>
+                                    <th class="py-3.5 px-4 font-semibold">Tajuk Sebut Harga / Tender</th>
+                                    <th class="py-3.5 px-4 font-semibold">Tempoh Kontrak</th>
+                                    <th class="py-3.5 px-4 font-semibold text-right">Nilai Kontrak (RM)</th>
+                                    <th class="py-3.5 px-4 font-semibold text-center">Status Siap</th>
+                                    <th class="py-3.5 px-4 font-semibold">Justifikasi</th>
+                                    <th class="py-3.5 px-4 font-semibold text-center">Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="records-tbody" class="divide-y divide-slate-200 text-slate-700">
+                                <!-- Dynamic Rows Injected Here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Empty State View -->
+                    <div id="empty-state" class="hidden py-12 text-center">
+                        <div class="w-16 h-16 mx-auto mb-3 text-slate-300">
+                            <i class="fa-solid fa-folder-open text-5xl"></i>
+                        </div>
+                        <h4 class="text-base font-bold text-slate-700">Tiada Rekod Dijumpai</h4>
+                        <p class="text-xs text-slate-500 mt-1">Sila pastikan kata kunci carian anda betul atau tambah rekod baharu.</p>
+                    </div>
+
+                    <!-- Table Footer Info -->
+                    <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-2">
+                        <p id="table-count-info">Menunjukkan 0 daripada 0 rekod</p>
+                        <p class="font-medium text-slate-600">LPP Terengganu &bull; Modul Pemantauan Kontrak</p>
+                    </div>
+                </div>
+
+            </main>
+
+            <!-- Footer -->
+            <footer class="bg-slate-800 text-slate-400 py-4 border-t border-slate-700 mt-auto text-xs text-center">
+                <p>&copy; 2026 Lembaga Pertubuhan Peladang Negeri Terengganu. Hak Cipta Terelihara.</p>
+            </footer>
+        </div>
+
+    </div>
+
+    <!-- MODAL: ADD / EDIT CONTRACTOR RECORD -->
+    <div id="add-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-100 my-8 animate-fade-in">
+            <div class="bg-lpp-800 px-6 py-4 text-white flex justify-between items-center">
+                <h3 id="modal-title" class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-file-circle-plus text-amber-400"></i>
+                    <span>Tambah Rekod Pembekal / Kontraktor</span>
+                </h3>
+                <button onclick="closeModal('add-modal')" class="text-white/80 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="record-form" onsubmit="handleSaveRecord(event)" class="p-6 space-y-4">
+                <input type="hidden" id="edit-record-id">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Contractor Name -->
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nama Pembekal / Kontraktor <span class="text-red-500">*</span></label>
+                        <input type="text" id="form-nama" required placeholder="Cth: Pembinaan Murni Sdn Bhd" 
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-lpp-600 outline-none">
+                    </div>
+
+                    <!-- Tender No -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">No. Sebut Harga / Tender <span class="text-red-500">*</span></label>
+                        <input type="text" id="form-notender" required placeholder="Cth: LPP/TRG/SH/05/2026" 
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-lpp-600 outline-none">
+                    </div>
+
+                    <!-- Contract Value -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nilai Kontrak (RM) <span class="text-red-500">*</span></label>
+                        <input type="number" step="0.01" id="form-nilai" required placeholder="Cth: 150000.00" 
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-lpp-600 outline-none">
+                    </div>
+
+                    <!-- Contract Duration -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tempoh Kontrak <span class="text-red-500">*</span></label>
+                        <input type="text" id="form-tempoh" required placeholder="Cth: 12 Minggu (1 Jan - 31 Mar 2026)" 
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-lpp-600 outline-none">
+                    </div>
+
+                    <!-- Completion Status -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tempoh Siap (Status) <span class="text-red-500">*</span></label>
+                        <select id="form-status" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-lpp-600 outline-none">
+                            <option value="On-time">On-time (Siap Mengikut Masa)</option>
+                            <option value="EOT">EOT (Extension of Time / Lanjutan Masa)</option>
+                            <option value="LAD">LAD (Liquidated Ascertained Damages / Dikenakan Denda)</option>
+                        </select>
+                    </div>
+
+                    <!-- Tender Title -->
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tajuk Sebut Harga / Tender <span class="text-red-500">*</span></label>
+                        <textarea id="form-tajuk" rows="2" required placeholder="Cth: Kerja-kerja Membekal Dan Memasang Pagar Kawasan Pusat Peladang Besut" 
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-lpp-600 outline-none"></textarea>
+                    </div>
+
+                    <!-- Justification -->
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Justifikasi / Catatan Prestasi <span class="text-red-500">*</span></label>
+                        <textarea id="form-justifikasi" rows="2" required placeholder="Cth: Kerja disiapkan 5 hari lebih awal dengan kualiti memuaskan." 
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-lpp-600 outline-none"></textarea>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-200 flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal('add-modal')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg transition">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-lpp-700 hover:bg-lpp-800 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Simpan Rekod</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: VIEW DETAILS -->
+    <div id="view-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-100 animate-fade-in">
+            <div class="bg-slate-800 px-6 py-4 text-white flex justify-between items-center">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-amber-400"></i>
+                    <span>Maklumat Terperinci Prestasi Kontraktor</span>
+                </h3>
+                <button onclick="closeModal('view-modal')" class="text-white/80 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="view-modal-body" class="p-6 space-y-3 text-sm">
+                <!-- Injected via JavaScript -->
+            </div>
+            <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex justify-end">
+                <button onclick="closeModal('view-modal')" class="px-4 py-2 bg-slate-700 text-white text-xs font-semibold rounded-lg hover:bg-slate-800">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: REGISTERED USERS LIST -->
+    <div id="users-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 animate-fade-in">
+            <div class="bg-slate-800 px-6 py-4 text-white flex justify-between items-center">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-users text-amber-400"></i>
+                    <span>Pengguna Berdaftar Sistem</span>
+                </h3>
+                <button onclick="closeModal('users-modal')" class="text-white/80 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="overflow-y-auto max-h-64 border rounded-lg border-slate-200">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-100 uppercase font-semibold text-slate-600">
+                            <tr>
+                                <th class="p-2.5">Nama Penuh</th>
+                                <th class="p-2.5">No. KP</th>
+                                <th class="p-2.5">Jawatan / Bahagian</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-tbody" class="divide-y divide-slate-200 text-slate-700">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-3"><i class="fa-solid fa-shield-halved text-lpp-600 mr-1"></i> Data pengguna disimpan secara selamat dalam peranti tempatan (LocalStorage).</p>
+            </div>
+            <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex justify-end">
+                <button onclick="closeModal('users-modal')" class="px-4 py-2 bg-slate-700 text-white text-xs font-semibold rounded-lg hover:bg-slate-800">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA INITIALIZATION & LOCALSTORAGE MANAGEMENT ---
+        
+        // Initial Default Users
+        const DEFAULT_USERS = [
+            { ic: '880101115544', password: 'lpp123', name: 'Ahmad Shabery (Admin)', dept: 'Bahagian Pembangunan & Kontrak' },
+            { ic: '900202113322', password: 'user123', name: 'Siti Norhaliza', dept: 'Unit Kewangan LPP' }
+        ];
+
+        // Initial Default Contractor Records
+        const DEFAULT_RECORDS = [
+            {
+                id: '1',
+                nama: 'Pembinaan Jaya Terengganu Sdn Bhd',
+                noTender: 'LPP/TRG/SH/01/2026',
+                tajuk: 'Kerja-kerja Membaikpulih Dan Memasang Pagar Kawasan Pusat Peladang Besut',
+                tempoh: '8 Minggu (1 Jan - 28 Feb 2026)',
+                nilai: 85000.00,
+                status: 'On-time',
+                justifikasi: 'Selesai 5 hari awal dari jadual asal. Mutu kerja cemerlang.',
+                createdUser: 'Ahmad Shabery (Admin)'
+            },
+            {
+                id: '2',
+                nama: 'Sykt Pembekalan Peladang Setiu',
+                noTender: 'LPP/TRG/TEN/02/2025',
+                tajuk: 'Membekal Baja Organik Dan Peralatan Pertanian Ke PPK Setiu',
+                tempoh: '12 Minggu (15 Okt - 15 Jan 2026)',
+                nilai: 240000.00,
+                status: 'EOT',
+                justifikasi: 'Kelulusan EOT 14 hari diberi disebabkan kelewatan stok pengimportan bahan asas.',
+                createdUser: 'Ahmad Shabery (Admin)'
+            },
+            {
+                id: '3',
+                nama: 'Kontraktor Bina Bakti Enterprise',
+                noTender: 'LPP/TRG/SH/12/2025',
+                tajuk: 'Naik Taraf Bangunan Pejabat PPK Dungun Dan Kerja Elektrikal',
+                tempoh: '6 Minggu (1 Nov - 12 Dis 2025)',
+                nilai: 45000.00,
+                status: 'LAD',
+                justifikasi: 'Lewat 10 hari tanpa sebab munasabah. Dikenakan denda LAD sebanyak RM1,200.',
+                createdUser: 'Siti Norhaliza'
+            },
+            {
+                id: '4',
+                nama: 'Terengganu Agro Tech Enterprise',
+                noTender: 'LPP/TRG/SH/04/2026',
+                tajuk: 'Membekal System Pengairan Titisan Ladang Nanas PPK Marang',
+                tempoh: '4 Minggu (1 Feb - 1 Mar 2026)',
+                nilai: 62000.00,
+                status: 'On-time',
+                justifikasi: 'Penyerahan tugasan mengikut spesifikasi dan siap tepat pada tarikh perjanjian.',
+                createdUser: 'Ahmad Shabery (Admin)'
+            }
+        ];
+
+        // Local Storage Helpers
+        function getUsers() {
+            const data = localStorage.getItem('lpp_users');
+            return data ? JSON.parse(data) : DEFAULT_USERS;
+        }
+
+        function saveUsers(users) {
+            localStorage.setItem('lpp_users', JSON.stringify(users));
+        }
+
+        function getRecords() {
+            const data = localStorage.getItem('lpp_records');
+            return data ? JSON.parse(data) : DEFAULT_RECORDS;
+        }
+
+        function saveRecords(records) {
+            localStorage.setItem('lpp_records', JSON.stringify(records));
+        }
+
+        // Global State Variables
+        let currentUser = null;
+        let currentFilter = 'ALL';
+        let pieChartInstance = null; // Chart.js Instance Variable
+
+        // --- INITIALIZATION ON LOAD ---
+        window.addEventListener('DOMContentLoaded', () => {
+            // Seed LocalStorage if empty
+            if (!localStorage.getItem('lpp_users')) saveUsers(DEFAULT_USERS);
+            if (!localStorage.getItem('lpp_records')) saveRecords(DEFAULT_RECORDS);
+
+            // Check Active Session
+            const activeSession = localStorage.getItem('lpp_active_session');
+            if (activeSession) {
+                currentUser = JSON.parse(activeSession);
+                showDashboard();
+            } else {
+                showAuth();
+            }
+        });
+
+        // --- AUTHENTICATION MODULE ---
+
+        function switchAuthTab(tab) {
+            const loginForm = document.getElementById('login-form');
+            const regForm = document.getElementById('register-form');
+            const loginBtn = document.getElementById('tab-login-btn');
+            const regBtn = document.getElementById('tab-register-btn');
+            const alertBox = document.getElementById('auth-alert');
+
+            alertBox.classList.add('hidden');
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                regForm.classList.add('hidden');
+                loginBtn.className = "flex-1 py-3 text-sm font-semibold text-lpp-700 border-b-2 border-lpp-700 transition";
+                regBtn.className = "flex-1 py-3 text-sm font-semibold text-slate-500 hover:text-slate-700 transition";
+            } else {
+                loginForm.classList.add('hidden');
+                regForm.classList.remove('hidden');
+                regBtn.className = "flex-1 py-3 text-sm font-semibold text-amber-600 border-b-2 border-amber-600 transition";
+                loginBtn.className = "flex-1 py-3 text-sm font-semibold text-slate-500 hover:text-slate-700 transition";
+            }
+        }
+
+        function showAuthAlert(msg, isSuccess = false) {
+            const alertBox = document.getElementById('auth-alert');
+            alertBox.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-emerald-100', 'text-emerald-700');
+            
+            if (isSuccess) {
+                alertBox.classList.add('bg-emerald-100', 'text-emerald-700');
+                alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${msg}</span>`;
+            } else {
+                alertBox.classList.add('bg-red-100', 'text-red-700');
+                alertBox.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> <span>${msg}</span>`;
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const ic = document.getElementById('login-ic').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+
+            const users = getUsers();
+            const user = users.find(u => u.ic === ic && u.password === password);
+
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('lpp_active_session', JSON.stringify(user));
+                showAuthAlert('Log masuk berjaya! Memuatkan dashboard...', true);
+                setTimeout(() => {
+                    showDashboard();
+                }, 500);
+            } else {
+                showAuthAlert('No. KP atau kata laluan tidak sah!');
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value.trim();
+            const ic = document.getElementById('reg-ic').value.trim();
+            const dept = document.getElementById('reg-dept').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
+
+            const users = getUsers();
+            if (users.some(u => u.ic === ic)) {
+                showAuthAlert('No. KP ini telah berdaftar dalam sistem!');
+                return;
+            }
+
+            const newUser = { ic, password, name, dept };
+            users.push(newUser);
+            saveUsers(users);
+
+            showAuthAlert('Pendaftaran berjaya! Sila log masuk.', true);
+            document.getElementById('register-form').reset();
+            setTimeout(() => {
+                switchAuthTab('login');
+                document.getElementById('login-ic').value = ic;
+            }, 1000);
+        }
+
+        function handleLogout() {
+            if (confirm('Adakah anda pasti untuk log keluar dari sistem?')) {
+                localStorage.removeItem('lpp_active_session');
+                currentUser = null;
+                showAuth();
+            }
+        }
+
+        function showAuth() {
+            document.getElementById('auth-container').classList.remove('hidden');
+            document.getElementById('main-dashboard').classList.add('hidden');
+            document.getElementById('login-form').reset();
+            document.getElementById('auth-alert').classList.add('hidden');
+        }
+
+        function showDashboard() {
+            document.getElementById('auth-container').classList.add('hidden');
+            document.getElementById('main-dashboard').classList.remove('hidden');
+
+            document.getElementById('user-display-name').textContent = currentUser.name;
+            document.getElementById('user-display-dept').textContent = currentUser.dept;
+
+            renderDashboardStats();
+            renderTable();
+        }
+
+        // --- DASHBOARD STATS & PIE CHART LOGIC ---
+
+        function renderDashboardStats() {
+            const records = getRecords();
+            const total = records.length;
+            const ontime = records.filter(r => r.status === 'On-time').length;
+            const eot = records.filter(r => r.status === 'EOT').length;
+            const lad = records.filter(r => r.status === 'LAD').length;
+
+            const rate = total > 0 ? Math.round((ontime / total) * 100) : 0;
+            const eotRate = total > 0 ? Math.round((eot / total) * 100) : 0;
+            const ladRate = total > 0 ? Math.round((lad / total) * 100) : 0;
+
+            // Update KPI Cards
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-ontime').textContent = ontime;
+            document.getElementById('stat-eot').textContent = eot;
+            document.getElementById('stat-lad').textContent = lad;
+            document.getElementById('stat-rate').textContent = `${rate}%`;
+
+            // Update Progress Bars
+            document.getElementById('bar-ontime-label').textContent = `${rate}% (${ontime})`;
+            document.getElementById('bar-ontime-fill').style.width = `${rate}%`;
+
+            document.getElementById('bar-eot-label').textContent = `${eotRate}% (${eot})`;
+            document.getElementById('bar-eot-fill').style.width = `${eotRate}%`;
+
+            document.getElementById('bar-lad-label').textContent = `${ladRate}% (${lad})`;
+            document.getElementById('bar-lad-fill').style.width = `${ladRate}%`;
+
+            // Render Chart.js Pie Chart
+            renderPieChart(ontime, eot, lad);
+        }
+
+        // --- PDF REPORT GENERATION MODULE ---
+
+        function generatePDFReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const records = getRecords();
+            const total = records.length;
+            const ontime = records.filter(r => r.status === 'On-time').length;
+            const eot = records.filter(r => r.status === 'EOT').length;
+            const lad = records.filter(r => r.status === 'LAD').length;
+            const rate = total > 0 ? Math.round((ontime / total) * 100) : 0;
+
+            const currentDate = new Date().toLocaleDateString('ms-MY', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // 1. Header Header Banner
+            doc.setFillColor(21, 128, 61); // LPP Green (#15803d)
+            doc.rect(0, 0, 297, 24, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(14);
+            doc.text('LEMBAGA PERTUBUHAN PELADANG NEGERI TERENGGANU', 14, 11);
+
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('LAPORAN REKOD PRESTASI PEMBEKAL & KONTRAKTOR PROJEK', 14, 18);
+
+            // 2. Report Metadata
+            doc.setTextColor(51, 65, 85);
+            doc.setFontSize(9);
+            doc.text(`Tarikh Cetakan: ${currentDate}`, 210, 31);
+            doc.text(`Dicetak Oleh: ${currentUser ? currentUser.name : 'Pentadbir'}`, 210, 36);
+
+            // 3. KPI Summary Box Section
+            doc.setFillColor(248, 250, 252);
+            doc.setDrawColor(226, 232, 240);
+            doc.roundedRect(14, 28, 185, 20, 2, 2, 'FD');
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(15, 23, 42);
+            doc.text('RINGKASAN PRESTASI PROJEK:', 18, 35);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8.5);
+            doc.text(`Jumlah Rekod: ${total}`, 18, 42);
+            doc.setTextColor(16, 185, 129); // Emerald
+            doc.text(`On-Time: ${ontime}`, 60, 42);
+            doc.setTextColor(245, 158, 11); // Amber
+            doc.text(`EOT: ${eot}`, 95, 42);
+            doc.setTextColor(239, 68, 68); // Red
+            doc.text(`LAD: ${lad}`, 125, 42);
+            doc.setTextColor(21, 128, 61);
+            doc.text(`Kadar Kecekapan: ${rate}%`, 155, 42);
+
+            // 4. AutoTable for Contractor Records
+            const tableBody = records.map((item, idx) => [
+                idx + 1,
+                item.nama,
+                item.noTender,
+                item.tajuk,
+                item.tempoh,
+                `RM ${formatMoney(item.nilai)}`,
+                item.status,
+                item.justifikasi
+            ]);
+
+            doc.autoTable({
+                startY: 53,
+                head: [['Bil', 'Nama Pembekal / Kontraktor', 'No. Sebut Harga / Tender', 'Tajuk Sebut Harga / Tender', 'Tempoh Kontrak', 'Nilai Kontrak', 'Status', 'Justifikasi / Catatan']],
+                body: tableBody,
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [30, 41, 59], // Slate 800
+                    textColor: [255, 255, 255],
+                    fontSize: 8,
+                    fontStyle: 'bold',
+                    halign: 'center',
+                    valign: 'middle'
+                },
+                bodyStyles: {
+                    fontSize: 7.5,
+                    textColor: [51, 65, 85],
+                    valign: 'middle'
+                },
+                columnStyles: {
+                    0: { cellWidth: 10, halign: 'center' }, // Bil
+                    1: { cellWidth: 42, fontStyle: 'bold' }, // Nama
+                    2: { cellWidth: 35 }, // No Tender
+                    3: { cellWidth: 60 }, // Tajuk
+                    4: { cellWidth: 28 }, // Tempoh
+                    5: { cellWidth: 28, halign: 'right', fontStyle: 'bold' }, // Nilai
+                    6: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }, // Status
+                    7: { cellWidth: 46 }  // Justifikasi
+                },
+                didParseCell: function (data) {
+                    // Color code status column
+                    if (data.section === 'body' && data.column.index === 6) {
+                        if (data.cell.raw === 'On-time') {
+                            data.cell.styles.textColor = [16, 185, 129];
+                        } else if (data.cell.raw === 'EOT') {
+                            data.cell.styles.textColor = [217, 119, 6];
+                        } else if (data.cell.raw === 'LAD') {
+                            data.cell.styles.textColor = [220, 38, 38];
+                        }
+                    }
+                },
+                margin: { left: 14, right: 14 }
+            });
+
+            // 5. Footer Page Numbers
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(7.5);
+                doc.setTextColor(148, 163, 184);
+                doc.text(`Sistem Rekod Prestasi Pembekal / Kontraktor LPP Terengganu | Muka Surat ${i} daripada ${pageCount}`, 14, 202);
+            }
+
+            // Save PDF File
+            doc.save(`Laporan_Prestasi_Kontraktor_LPP_Terengganu_${new Date().toISOString().slice(0, 10)}.pdf`);
+        }
+
+        function renderPieChart(ontime, eot, lad) {
+            const canvas = document.getElementById('performancePieChart');
+            const emptyMsg = document.getElementById('chart-empty-msg');
+
+            if (ontime === 0 && eot === 0 && lad === 0) {
+                canvas.classList.add('hidden');
+                emptyMsg.classList.remove('hidden');
+                return;
+            } else {
+                canvas.classList.remove('hidden');
+                emptyMsg.classList.add('hidden');
+            }
+
+            // Destroy previous chart instance if it exists
+            if (pieChartInstance) {
+                pieChartInstance.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            pieChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['On-Time (Siap Masa)', 'EOT (Lanjutan Masa)', 'LAD (Denda Lewat)'],
+                    datasets: [{
+                        data: [ontime, eot, lad],
+                        backgroundColor: [
+                            '#10b981', // Emerald 500
+                            '#f59e0b', // Amber 500
+                            '#ef4444'  // Red 500
+                        ],
+                        hoverBackgroundColor: [
+                            '#059669', // Emerald 600
+                            '#d97706', // Amber 600
+                            '#dc2626'  // Red 600
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 12,
+                                font: {
+                                    family: 'Inter',
+                                    size: 11
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.chart._metasets[0].total;
+                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                    return ` ${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        function setFilter(status) {
+            currentFilter = status;
+            ['all', 'ontime', 'eot', 'lad'].forEach(f => {
+                const btn = document.getElementById(`filter-${f}`);
+                if (f === status.toLowerCase()) {
+                    btn.className = "px-3 py-1.5 rounded-lg font-medium bg-lpp-700 text-white shadow-sm";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200";
+                }
+            });
+            renderTable();
+        }
+
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('clear-search-btn').classList.add('hidden');
+            renderTable();
+        }
+
+        function renderTable() {
+            const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
+            const clearBtn = document.getElementById('clear-search-btn');
+            if (searchVal) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            const records = getRecords();
+            const tbody = document.getElementById('records-tbody');
+            const emptyState = document.getElementById('empty-state');
+
+            // Filter logic
+            const filtered = records.filter(r => {
+                const matchesFilter = (currentFilter === 'ALL') || (r.status === currentFilter);
+                const matchesSearch = 
+                    r.nama.toLowerCase().includes(searchVal) ||
+                    r.noTender.toLowerCase().includes(searchVal) ||
+                    r.tajuk.toLowerCase().includes(searchVal) ||
+                    r.status.toLowerCase().includes(searchVal) ||
+                    r.justifikasi.toLowerCase().includes(searchVal);
+
+                return matchesFilter && matchesSearch;
+            });
+
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                filtered.forEach((item, index) => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+
+                    // Status Badge Styling
+                    let statusBadge = '';
+                    if (item.status === 'On-time') {
+                        statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 flex items-center justify-center gap-1 w-24 mx-auto"><i class="fa-solid fa-circle-check text-[10px]"></i> On-Time</span>`;
+                    } else if (item.status === 'EOT') {
+                        statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 flex items-center justify-center gap-1 w-24 mx-auto"><i class="fa-solid fa-clock-rotate-left text-[10px]"></i> EOT</span>`;
+                    } else {
+                        statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 flex items-center justify-center gap-1 w-24 mx-auto"><i class="fa-solid fa-triangle-exclamation text-[10px]"></i> LAD</span>`;
+                    }
+
+                    tr.innerHTML = `
+                        <td class="py-3 px-4 font-semibold text-slate-500">${index + 1}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">${escapeHtml(item.nama)}</td>
+                        <td class="py-3 px-4 font-mono text-xs text-lpp-800 font-semibold">${escapeHtml(item.noTender)}</td>
+                        <td class="py-3 px-4 max-w-xs truncate" title="${escapeHtml(item.tajuk)}">${escapeHtml(item.tajuk)}</td>
+                        <td class="py-3 px-4 text-xs">${escapeHtml(item.tempoh)}</td>
+                        <td class="py-3 px-4 font-semibold text-right text-slate-800">RM ${formatMoney(item.nilai)}</td>
+                        <td class="py-3 px-4 text-center">${statusBadge}</td>
+                        <td class="py-3 px-4 max-w-xs truncate text-xs text-slate-500" title="${escapeHtml(item.justifikasi)}">${escapeHtml(item.justifikasi)}</td>
+                        <td class="py-3 px-4 text-center">
+                            <div class="flex items-center justify-center space-x-1">
+                                <button onclick="viewRecord('${item.id}')" title="Papar Maklumat" class="p-1.5 text-slate-600 hover:text-lpp-700 hover:bg-slate-100 rounded">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                                <button onclick="editRecord('${item.id}')" title="Edit" class="p-1.5 text-slate-600 hover:text-amber-600 hover:bg-slate-100 rounded">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button onclick="deleteRecord('${item.id}')" title="Padam" class="p-1.5 text-slate-600 hover:text-red-600 hover:bg-slate-100 rounded">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('table-count-info').textContent = `Menunjukkan ${filtered.length} daripada ${records.length} rekod`;
+        }
+
+        // --- CRUD OPERATIONS ---
+
+        function handleSaveRecord(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-record-id').value;
+            const nama = document.getElementById('form-nama').value.trim();
+            const noTender = document.getElementById('form-notender').value.trim();
+            const nilai = parseFloat(document.getElementById('form-nilai').value) || 0;
+            const tempoh = document.getElementById('form-tempoh').value.trim();
+            const status = document.getElementById('form-status').value;
+            const tajuk = document.getElementById('form-tajuk').value.trim();
+            const justifikasi = document.getElementById('form-justifikasi').value.trim();
+
+            let records = getRecords();
+
+            if (id) {
+                // Edit Existing Record
+                const idx = records.findIndex(r => r.id === id);
+                if (idx !== -1) {
+                    records[idx] = { ...records[idx], nama, noTender, nilai, tempoh, status, tajuk, justifikasi };
+                }
+            } else {
+                // Add New Record
+                const newRecord = {
+                    id: Date.now().toString(),
+                    nama,
+                    noTender,
+                    nilai,
+                    tempoh,
+                    status,
+                    tajuk,
+                    justifikasi,
+                    createdUser: currentUser.name
+                };
+                records.unshift(newRecord);
+            }
+
+            saveRecords(records);
+            closeModal('add-modal');
+            renderDashboardStats();
+            renderTable();
+        }
+
+        function viewRecord(id) {
+            const records = getRecords();
+            const item = records.find(r => r.id === id);
+            if (!item) return;
+
+            const modalBody = document.getElementById('view-modal-body');
+            modalBody.innerHTML = `
+                <div class="space-y-3">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase">Nama Pembekal / Kontraktor</span>
+                        <p class="font-bold text-slate-800 text-base">${escapeHtml(item.nama)}</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <span class="text-xs font-bold text-slate-400 uppercase">No. Sebut Harga / Tender</span>
+                            <p class="font-semibold text-lpp-800">${escapeHtml(item.noTender)}</p>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-slate-400 uppercase">Nilai Kontrak</span>
+                            <p class="font-semibold text-slate-800">RM ${formatMoney(item.nilai)}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase">Tajuk Projek</span>
+                        <p class="text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-200 mt-0.5">${escapeHtml(item.tajuk)}</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <span class="text-xs font-bold text-slate-400 uppercase">Tempoh Kontrak</span>
+                            <p class="text-slate-700">${escapeHtml(item.tempoh)}</p>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-slate-400 uppercase">Status Penyiapan</span>
+                            <p class="font-bold text-slate-800">${item.status}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase">Justifikasi / Catatan</span>
+                        <p class="text-slate-700 bg-amber-50/50 p-2.5 rounded-lg border border-amber-200/60 mt-0.5">${escapeHtml(item.justifikasi)}</p>
+                    </div>
+                    <div class="pt-2 border-t border-slate-100 text-[11px] text-slate-400 flex justify-between">
+                        <span>Pencatat: ${escapeHtml(item.createdUser || 'Pentadbir')}</span>
+                        <span>ID Rekod: ${item.id}</span>
+                    </div>
+                </div>
+            `;
+            openModal('view-modal');
+        }
+
+        function editRecord(id) {
+            const records = getRecords();
+            const item = records.find(r => r.id === id);
+            if (!item) return;
+
+            document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-400"></i><span>Kemaskini Rekod Pembekal</span>`;
+            document.getElementById('edit-record-id').value = item.id;
+            document.getElementById('form-nama').value = item.nama;
+            document.getElementById('form-notender').value = item.noTender;
+            document.getElementById('form-nilai').value = item.nilai;
+            document.getElementById('form-tempoh').value = item.tempoh;
+            document.getElementById('form-status').value = item.status;
+            document.getElementById('form-tajuk').value = item.tajuk;
+            document.getElementById('form-justifikasi').value = item.justifikasi;
+
+            openModal('add-modal');
+        }
+
+        function deleteRecord(id) {
+            if (confirm('Adakah anda pasti untuk memadam rekod pembekal ini?')) {
+                let records = getRecords();
+                records = records.filter(r => r.id !== id);
+                saveRecords(records);
+                renderDashboardStats();
+                renderTable();
+            }
+        }
+
+        // --- UTILITY FUNCTIONS ---
+
+        function openModal(modalId) {
+            if (modalId === 'add-modal' && !document.getElementById('edit-record-id').value) {
+                document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-file-circle-plus text-amber-400"></i><span>Tambah Rekod Pembekal / Kontraktor</span>`;
+                document.getElementById('record-form').reset();
+                document.getElementById('edit-record-id').value = '';
+            }
+
+            if (modalId === 'users-modal') {
+                renderUsersList();
+            }
+
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            if (modalId === 'add-modal') {
+                document.getElementById('record-form').reset();
+                document.getElementById('edit-record-id').value = '';
+            }
+        }
+
+        function renderUsersList() {
+            const users = getUsers();
+            const tbody = document.getElementById('users-tbody');
+            tbody.innerHTML = '';
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-2.5 font-bold text-slate-800">${escapeHtml(u.name)}</td>
+                    <td class="p-2.5 font-mono text-slate-600">${escapeHtml(u.ic)}</td>
+                    <td class="p-2.5 text-slate-600">${escapeHtml(u.dept)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function formatMoney(amount) {
+            return Number(amount).toLocaleString('ms-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[m];
+            });
+        }
+    </script>
+</body>
+</html>
